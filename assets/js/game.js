@@ -10,11 +10,11 @@ class Drawable {
             y: 0
         }
     }
+
     update() {
         this.x += this.offsets.x;
         this.y += this.offsets.y;
     }
-
 
     createElement() {
         this.element = document.createElement("div");
@@ -30,40 +30,62 @@ class Drawable {
             height: ${this.h}px;
         `;
     }
+     removeElements() {
+        this.element.remove();
+     }
+
 
     isCollision(element) {
-    let a = {
-        x: this.x,
-        y: this.y,
-        x2: this.x + this.w,
-        x1: this.y + this.h
-    };
-
-    let b = {
-        x: element.x,
-        y: element.y,
-        x2: element.x + element.w,
-        x1: element.y + element.h
-    }
-    return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 <a.y2;
-}
-
-    class Fruit extends Drawable {
-        constructor(game) {
-            super(game);
-            this.w = 70;
-            this.h = 70;
-            this.y = 60;
-            this.x = random(0, window.innerWidth - this.w);
-            this.offsets.y = 3;
-            this.createElement()
+        let a = {
+            x1: this.x,
+            y1: this.y,
+            x2: this.x + this.w,
+            y2: this.y + this.h,
         }
-        update() {
-        if(this.isCollision(this.game.player)) console.log('plus point');
-        if(this.y > window.innerHeight) console.log('minus hp');
+        let b = {
+            x1: element.x,
+            y1: element.y,
+            x2: element.x + element.w,
+            y2: element.y + element.h,
+        }
+        return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+    }
+}
+
+
+class Fruit extends Drawable {
+    constructor(game) {
+        super(game);
+        this.w = 70;
+        this.h = 70;
+        this.y = 60;
+        this.x = random(0, window.innerWidth - this.w);
+        this.offsets.y = 3;
+        this.createElement();
     }
 
+
+    update() {
+        if (this.isCollision(this.game.player)) this.takePoint();
+        if (this.y > window.innerHeight) this.takeDamage();
+        super.update();
+    }
+
+    takePoint() {
+        if (this.game.remove(this)) {
+            this.removeElements();
+            this.game.points++
+        }
+    }
+
+    takeDamage() {
+        if (this.game.remove(this)) {
+            this.removeElements();
+            this.game.hp--;
+        }
+    }
 }
+
 class Banana extends Fruit {
     constructor(game) {
         super(game);
@@ -71,17 +93,19 @@ class Banana extends Fruit {
 }
 
 class Apple extends Fruit {
-    constructor(game) {
+    constructor() {
         super(game);
         this.offsets.y = 5;
     }
 }
+
 class Orange extends Fruit {
     constructor(game) {
         super(game);
         this.offsets.y = 7;
     }
 }
+
 
 class Player extends Drawable {
     constructor(game) {
@@ -93,7 +117,7 @@ class Player extends Drawable {
         this.speedPerFrame = 20;
         this.keys = {
             ArrowLeft: false,
-            ArrowRight: false,
+            ArrowRight: false
         }
         this.createElement();
         this.bindKeyEvents();
@@ -103,15 +127,17 @@ class Player extends Drawable {
         document.addEventListener('keydown', ev => this.changeKeyStatus(ev.code, true))
         document.addEventListener('keyup', ev => this.changeKeyStatus(ev.code, false))
     }
-
-    changeKeyStatus(code, value)  {
-        if (code in this.keys) this.keys[code] = value;
+    changeKeyStatus(code, value) {
+        if(code in this.keys) this.keys[code] = value;
     }
 
-    update() {
-        if( this.keys.ArrowLeft && this.x > 0) this.offsets.x = -this.speedPerFrame;
-        else if( this.keys.ArrowRight && this.x < window.innerWidth - this.w ) this.offsets.x = this. speedPerFrame;
-        else  this.offsets.x = 0;
+
+
+
+    update(){
+        if(this.keys.ArrowLeft && this.x > 0) this.offsets.x = -this.speedPerFrame;
+        else if(this.keys.ArrowRight && this.x < window.innerWidth - this.w) this.offsets.x = this.speedPerFrame;
+        else this.offsets.x = 0;
         super.update();
     }
 }
@@ -122,7 +148,9 @@ class Game {
         this.elements = [];
         this.player = this.generate(Player);
         this.counterForTimer = 0;
-        this.fruits = [Apple, Banana, Orange]
+        this.fruits = [Apple, Banana, Orange];
+        this.hp = 3;
+        this.points = 0;
     }
 
     start () {
@@ -138,7 +166,7 @@ class Game {
     loop() {
         requestAnimationFrame(() => {
             this.counterForTimer++;
-            if( this.counterForTimer % 60 === 0) {
+            if(this.counterForTimer % 60 === 0) {
                 this.randomFruitGenerate();
             }
             this.updateElements();
@@ -148,7 +176,7 @@ class Game {
     }
 
     randomFruitGenerate() {
-            this.generate(this.fruits[random(0,2)])
+        this.generate(this.fruits[random(0, 2)])
     }
 
     updateElements() {
@@ -159,10 +187,20 @@ class Game {
     }
 
     setParams() {
-        let params = ['name'];
-        let values = [this.name];
+        let params = ['name','points','hp'];
+        let values = [this.name, this.points, this.hp];
         params.forEach((param, ind) => {
             $(`#${param}`).innerHTML = values[ind];
         });
     }
+
+    remove(el){
+        let idx= this.elements.indexOf(el);
+        if(idx !== -1) {
+        this.elements.splice(idx, 1);
+        return true;
+        }
+        return false;
+    }
+
 }
