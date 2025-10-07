@@ -30,9 +30,10 @@ class Drawable {
             height: ${this.h}px;
         `;
     }
-     removeElements() {
+
+    removeElements() {
         this.element.remove();
-     }
+    }
 
 
     isCollision(element) {
@@ -127,16 +128,14 @@ class Player extends Drawable {
         document.addEventListener('keydown', ev => this.changeKeyStatus(ev.code, true))
         document.addEventListener('keyup', ev => this.changeKeyStatus(ev.code, false))
     }
+
     changeKeyStatus(code, value) {
-        if(code in this.keys) this.keys[code] = value;
+        if (code in this.keys) this.keys[code] = value;
     }
 
-
-
-
-    update(){
-        if(this.keys.ArrowLeft && this.x > 0) this.offsets.x = -this.speedPerFrame;
-        else if(this.keys.ArrowRight && this.x < window.innerWidth - this.w) this.offsets.x = this.speedPerFrame;
+    update() {
+        if (this.keys.ArrowLeft && this.x > 0) this.offsets.x = -this.speedPerFrame;
+        else if (this.keys.ArrowRight && this.x < window.innerWidth - this.w) this.offsets.x = this.speedPerFrame;
         else this.offsets.x = 0;
         super.update();
     }
@@ -151,9 +150,15 @@ class Game {
         this.fruits = [Apple, Banana, Orange];
         this.hp = 3;
         this.points = 0;
+        this.time = {
+            m1: 0,
+            m2: 0,
+            s1: 0,
+            s2: 0
+        };
     }
 
-    start () {
+    start() {
         this.loop();
     }
 
@@ -166,7 +171,8 @@ class Game {
     loop() {
         requestAnimationFrame(() => {
             this.counterForTimer++;
-            if(this.counterForTimer % 60 === 0) {
+            if (this.counterForTimer % 60 === 0) {
+                this.timer();
                 this.randomFruitGenerate();
             }
             this.updateElements();
@@ -187,20 +193,38 @@ class Game {
     }
 
     setParams() {
-        let params = ['name','points','hp'];
+        let params = ['name', 'points', 'hp'];
         let values = [this.name, this.points, this.hp];
         params.forEach((param, ind) => {
             $(`#${param}`).innerHTML = values[ind];
         });
     }
 
-    remove(el){
-        let idx= this.elements.indexOf(el);
-        if(idx !== -1) {
-        this.elements.splice(idx, 1);
-        return true;
+    remove(el) {
+        let idx = this.elements.indexOf(el);
+        if (idx !== -1) {
+            this.elements.splice(idx, 1);
+            return true;
         }
         return false;
+    }
+
+    timer() {
+        let time = this.time;
+        time.s2++;
+        if (time.s2 >= 10) {
+            time.s2 = 0;
+            time.s1++;
+        }
+        if (time.s1 >= 6) {
+            time.s1 = 0;
+            time.m2++;
+        }
+        if (time.m2 >= 10) {
+            time.m2 = 0;
+            time.m1++;
+        }
+        $('#timer').innerHTML = `${time.m1}${time.m2}:${time.s1}${time.s2}`;
     }
 
 }
